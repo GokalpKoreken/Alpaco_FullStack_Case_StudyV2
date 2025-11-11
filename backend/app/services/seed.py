@@ -3,6 +3,7 @@ from dataclasses import dataclass
 
 from ..config import get_settings
 
+REPO_REMOTE_URL = "git@github.com:GokalpKoreken/Alpaco_FullStack_Case_StudyV2.git"
 DEFAULT_SEED = "deadbeefcafe"
 
 
@@ -49,4 +50,5 @@ __all__ = [
     "compute_priority_score",
     "derive_seed",
     "get_seed",
+    "REPO_REMOTE_URL",
 ]
