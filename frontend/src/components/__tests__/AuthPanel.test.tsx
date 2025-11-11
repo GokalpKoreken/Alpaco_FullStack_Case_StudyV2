@@ -36,6 +36,13 @@ describe('AuthPanel', () => {
   });
 
   it('performs signup then redirects', async () => {
+    authApi.currentUser.mockResolvedValueOnce({
+      id: '1',
+      email: 'new@example.com',
+      is_admin: false,
+      created_at: new Date().toISOString()
+    });
+
     render(<AuthPanel mode="signup" />);
 
     fireEvent.change(screen.getByLabelText(/Email/i), { target: { value: 'new@example.com' } });

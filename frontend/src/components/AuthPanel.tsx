@@ -33,8 +33,8 @@ export function AuthPanel({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const effectiveHeading = heading ?? (mode === 'signin' ? 'Sign in to DropSpot' : 'Create your account');
-  const defaultSubheading = mode === 'signin' ? 'Access drops, waitlists, and claim codes.' : 'Join the waitlist community in seconds.';
+  const effectiveHeading = heading ?? (mode === 'signin' ? 'Welcome back' : 'Create your account');
+  const defaultSubheading = mode === 'signin' ? 'Sign in to DropSpot to access drops, waitlists, and claim codes.' : 'Join the waitlist community in seconds.';
   const otherMode = mode === 'signin' ? 'signup' : 'signin';
   const otherHref = `/auth/${otherMode}`;
 
