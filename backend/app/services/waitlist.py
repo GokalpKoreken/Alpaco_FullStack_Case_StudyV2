@@ -107,6 +107,11 @@ def claim_drop(session: Session, user: User, drop: Drop) -> Claim:
     if existing_claim:
         return existing_claim
 
+    total_claims_stmt = select(func.count()).select_from(Claim).where(Claim.drop_id == drop.id)
+    total_claims = session.scalar(total_claims_stmt) or 0
+    if total_claims >= drop.stock:
+        raise HTTPException(status.HTTP_409_CONFLICT, detail="No remaining claim slots")
+
     rank = _entry_rank(session, entry)
     if rank >= drop.stock:
         raise HTTPException(status.HTTP_409_CONFLICT, detail="No remaining claim slots")
