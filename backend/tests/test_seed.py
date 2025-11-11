@@ -22,3 +22,14 @@ def test_compute_priority_score_uses_seed(monkeypatch):
     # manual expectation based on coefficients (a=7+1=8,b=13+2=15,c=3+(0)=3)
     expected = 10 + (2500 % 8) + (12 % 15) - (1 % 3)
     assert score == expected
+
+
+def test_compute_priority_score_with_non_hex_seed(monkeypatch):
+    monkeypatch.setattr(seed, "get_seed", lambda: "testseed1234")
+    score = seed.compute_priority_score(
+        base=0,
+        signup_latency_ms=100,
+        account_age_days=5,
+        rapid_actions=0,
+    )
+    assert isinstance(score, float)
