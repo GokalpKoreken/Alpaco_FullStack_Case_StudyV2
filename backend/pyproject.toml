@@ -2,7 +2,9 @@
 name = "dropspot-backend"
 version = "0.1.0"
 description = "DropSpot waitlist and claim backend"
-authors = ["DropSpot Team <hr@alpacotech.com>"]
+authors = [
+    { name = "Gokalp Koreken", email = "hr@alpacotech.com" }
+]
 requires-python = ">=3.11"
 dependencies = [
     "fastapi~=0.112",
