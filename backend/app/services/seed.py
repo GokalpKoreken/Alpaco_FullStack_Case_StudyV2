@@ -5,6 +5,7 @@ from ..config import get_settings
 
 REPO_REMOTE_URL = "git@github.com:GokalpKoreken/Alpaco_FullStack_Case_StudyV2.git"
 DEFAULT_SEED = "deadbeefcafe"
+_HEX_DIGITS = set("0123456789abcdef")
 
 
 @dataclass(frozen=True)
@@ -15,11 +16,25 @@ class PriorityCoefficients:
     seed: str
 
 
+def _is_hex_prefix(seed: str) -> bool:
+    prefix = seed[:6].lower()
+    return len(prefix) == 6 and all(char in _HEX_DIGITS for char in prefix)
+
+
+def _normalized_seed(seed: str) -> str:
+    value = seed if _is_hex_prefix(seed) else hashlib.sha256(seed.encode()).hexdigest()
+    # ensure we have at least 6 characters to avoid index errors
+    if len(value) < 6:
+        value = (value * 2).ljust(6, "0")
+    return value.lower()
+
+
 def _compute_coefficients(seed: str) -> PriorityCoefficients:
-    a = 7 + (int(seed[0:2], 16) % 5)
-    b = 13 + (int(seed[2:4], 16) % 7)
-    c = 3 + (int(seed[4:6], 16) % 3)
-    return PriorityCoefficients(a=a, b=b, c=c, seed=seed)
+    normalized = _normalized_seed(seed)
+    a = 7 + (int(normalized[0:2], 16) % 5)
+    b = 13 + (int(normalized[2:4], 16) % 7)
+    c = 3 + (int(normalized[4:6], 16) % 3)
+    return PriorityCoefficients(a=a, b=b, c=c, seed=normalized)
 
 
 def get_seed() -> str:
