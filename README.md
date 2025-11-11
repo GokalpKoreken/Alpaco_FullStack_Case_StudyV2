@@ -111,9 +111,9 @@ GitHub Actions configuration lives in `.github/workflows/ci.yml`.
 
 Screenshots live in `docs/screenshots/` (add new captures as PNG files):
 
-- Landing page — `![Landing](docs/screenshots/landing.png)`
-- Drops listing — `![Drops](docs/screenshots/drops.png)`
-- Admin dashboard — `![Admin](docs/screenshots/admin.png)`
+- Landing page — ![Landing](docs/screenshots/landing.png)
+- Drops listing — ![Drops](docs/screenshots/drops.png)
+- Admin dashboard — ![Admin](docs/screenshots/admin.png)
 
 ## TODO Snapshot
 
