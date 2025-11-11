@@ -15,24 +15,39 @@ interface DraftDrop {
   base_priority: number;
 }
 
+const toInputValue = (value: string | Date): string => {
+  const date = value instanceof Date ? value : new Date(value);
+  return date.toISOString().slice(0, 16);
+};
+
 const emptyDraft = (): DraftDrop => {
   const now = new Date();
-  const iso = (d: Date) => d.toISOString().slice(0, 16);
   return {
     title: '',
     description: '',
     stock: 1,
-    waitlist_open_at: iso(new Date(now.getTime() - 60 * 60 * 1000)),
-    claim_open_at: iso(now),
-    claim_close_at: iso(new Date(now.getTime() + 60 * 60 * 1000)),
+    waitlist_open_at: toInputValue(new Date(now.getTime() - 60 * 60 * 1000)),
+    claim_open_at: toInputValue(now),
+    claim_close_at: toInputValue(new Date(now.getTime() + 60 * 60 * 1000)),
     base_priority: 0
   };
 };
+
+const draftFromDrop = (drop: Drop): DraftDrop => ({
+  title: drop.title,
+  description: drop.description ?? '',
+  stock: drop.stock,
+  waitlist_open_at: toInputValue(drop.waitlist_open_at),
+  claim_open_at: toInputValue(drop.claim_open_at),
+  claim_close_at: toInputValue(drop.claim_close_at),
+  base_priority: drop.base_priority
+});
 
 export function AdminPanel() {
   const { token, user } = useAuthStore();
   const [drops, setDrops] = useState<Drop[]>([]);
   const [draft, setDraft] = useState<DraftDrop>(emptyDraft);
+  const [editingId, setEditingId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
@@ -77,11 +92,17 @@ export function AdminPanel() {
         claim_open_at: new Date(draft.claim_open_at).toISOString(),
         claim_close_at: new Date(draft.claim_close_at).toISOString()
       };
-  const created = await dropApi.adminCreate(payload, token);
-  setDrops((prev: Drop[]) => [created, ...prev]);
-  setDraft(emptyDraft());
+      if (editingId) {
+        const updated = await dropApi.adminUpdate(editingId, payload, token);
+        setDrops((prev: Drop[]) => prev.map((drop) => (drop.id === editingId ? updated : drop)));
+        setEditingId(null);
+      } else {
+        const created = await dropApi.adminCreate(payload, token);
+        setDrops((prev: Drop[]) => [created, ...prev]);
+      }
+      setDraft(emptyDraft());
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to create drop');
+      setError(err instanceof Error ? err.message : 'Failed to save drop');
     } finally {
       setLoading(false);
     }
@@ -90,16 +111,30 @@ export function AdminPanel() {
   const handleDelete = async (id: string) => {
     if (!confirm('Delete this drop?')) return;
     try {
-  await dropApi.adminDelete(id, token);
-  setDrops((prev: Drop[]) => prev.filter((drop: Drop) => drop.id !== id));
+      await dropApi.adminDelete(id, token);
+      setDrops((prev: Drop[]) => prev.filter((drop: Drop) => drop.id !== id));
+      if (editingId === id) {
+        setEditingId(null);
+        setDraft(emptyDraft());
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to delete drop');
     }
   };
 
+  const handleEdit = (drop: Drop) => {
+    setEditingId(drop.id);
+    setDraft(draftFromDrop(drop));
+  };
+
+  const handleCancelEdit = () => {
+    setEditingId(null);
+    setDraft(emptyDraft());
+  };
+
   return (
     <section className="card">
-      <h2>Create drop</h2>
+      <h2>{editingId ? 'Edit drop' : 'Create drop'}</h2>
       <form onSubmit={handleSubmit} style={{ display: 'grid', gap: '0.75rem' }}>
         <input
           type="text"
@@ -157,8 +192,13 @@ export function AdminPanel() {
           />
         </label>
         <button type="submit" disabled={loading}>
-          {loading ? 'Saving…' : 'Create drop'}
+          {loading ? 'Saving…' : editingId ? 'Update drop' : 'Create drop'}
         </button>
+        {editingId ? (
+          <button type="button" onClick={handleCancelEdit} disabled={loading}>
+            Cancel editing
+          </button>
+        ) : null}
       </form>
       {error ? <p role="alert" style={{ color: '#f87171' }}>{error}</p> : null}
 
@@ -166,9 +206,12 @@ export function AdminPanel() {
       {drops.length === 0 ? <p>No drops yet.</p> : null}
       <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
         {drops.map((drop) => (
-          <li key={drop.id} style={{ marginBottom: '1rem' }}>
+          <li key={drop.id} style={{ marginBottom: '1rem', border: editingId === drop.id ? '1px solid #38bdf8' : undefined, borderRadius: editingId === drop.id ? '8px' : undefined, padding: editingId === drop.id ? '0.75rem' : undefined }}>
             <strong>{drop.title}</strong>
             <div style={{ display: 'flex', gap: '0.5rem' }}>
+              <button type="button" onClick={() => handleEdit(drop)}>
+                Edit
+              </button>
               <button type="button" onClick={() => void loadDrops()}>
                 Refresh data
               </button>
